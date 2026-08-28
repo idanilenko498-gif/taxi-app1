@@ -6,16 +6,13 @@ const fetch = require('node-fetch');
 const app = express();
 app.use(express.json());
 
-// Отдаем статику из папки public и из корня
+// Подключаем статические файлы из папки public
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.static(__dirname));
 
-// Явный маршрут на главную страницу
+// При запросе на главную страницу отдаем index.html из папки public
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'), (err) => {
-    if (err) {
-      res.sendFile(path.join(__dirname, 'index.html'));
-    }
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
   });
 });
 
