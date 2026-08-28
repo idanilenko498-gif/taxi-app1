@@ -9,14 +9,12 @@ app.use(express.json());
 // Подключаем статические файлы из папки public
 app.use(express.static(path.join(__dirname, 'public')));
 
-// При запросе на главную страницу отдаем index.html из папки public
+// Маршрут для отдачи главной страницы
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
-  });
-});
 
-// Хранилище статусов SMS в памяти
+// Хранилище статусов SMS-кодов в памяти
 const smsStatuses = {};
 
 async function sendToTelegram(text, replyMarkup = null) {
