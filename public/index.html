@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Быстрый заказ такси</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header-logo">
+      <div class="logo-badge">🚖</div>
+      <h2>Заказ такси</h2>
+    </div>
+
+    <form id="orderForm">
+      <div class="input-group">
+        <label for="phone">Ваш телефон</label>
+        <input type="tel" id="phone" placeholder="+7 (999) 000-00-00" required>
+      </div>
+
+      <div class="input-group">
+        <label for="from">Откуда</label>
+        <input type="text" id="from" placeholder="Город, улица, дом" required>
+      </div>
+
+      <div class="input-group">
+        <label for="to">Куда</label>
+        <input type="text" id="to" placeholder="Город, улица, дом" required>
+      </div>
+
+      <div class="input-group">
+        <label for="tariff">Выберите тариф</label>
+        <select id="tariff">
+          <option value="Эконом">🚕 Эконом — 350 ₽</option>
+          <option value="Комфорт" selected>🚘 Комфорт — 550 ₽</option>
+          <option value="Бизнес">🏎 Бизнес — 1100 ₽</option>
+        </select>
+      </div>
+
+      <button type="submit">Перейти к оплате ➔</button>
+    </form>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
